@@ -2,7 +2,7 @@
 
     <div class="dropdown" onclick={ toggleDropDown } id="settings-icon">
         <div class="dropdown-logo">
-            <img src={ state.icon } alt="settings">
+           
         </div>
     </div>
 
@@ -29,17 +29,39 @@
                 document.addEventListener('click', function (e) {
                     var dropdown = document.getElementById('settings-dropdown');
                     var icon = document.getElementById('settings-icon');
-
+                    
                     if (!icon.contains(e.target) && !dropdown.contains(e.target) && this.isClicked()) {
                         this.toggleDropDown();
                     }
                 }.bind(this));
+
+                const smallDevice = window.matchMedia('(min-width: 600px)')
+
+                smallDevice.addListener(this.handleDeviceChange);
+
+                this.handleDeviceChange(smallDevice)
             },
             isClicked() {
                 return this.state.dropDownClicked
             },
             toggleDropDown() {
+                var device = window.matchMedia('(min-width: 600px)');
+
+                    if(!device.matches){
+                        return;
+                    }
+
                 this.state.dropDownClicked = !this.state.dropDownClicked
+                this.update()
+            },
+            handleDeviceChange(e){
+                if (e.matches){
+                    this.state.dropDownClicked = false
+                }
+                else{
+                    this.state.dropDownClicked = true
+                }
+
                 this.update()
             }
         }

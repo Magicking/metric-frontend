@@ -1,13 +1,15 @@
 
 .theme-switch-line {
     display: flex;
-    margin: 15px;
+    padding-left: 15px;
 }
 
 .theme-switch-line-group {
     display: grid;
     grid-auto-flow: column;
-    grid-column-gap: 15px
+    grid-column-gap: 15px;
+    padding-top: 10px;
+    line-height: 16px;
 }
 
 .theme-switch-button {
