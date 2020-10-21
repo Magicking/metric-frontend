@@ -1,27 +1,58 @@
 @import "../theme_colors/colors.css";
 
 .dropdown {
-    position: absolute;
-    right: 10px;
+    display: none;
     width: 40px;
-    height: 41px;
+    height: 40px;
     border-radius: 5px;
     background: var(--settings-button-background-color);
     box-shadow: 0 4px 4px rgba(0, 0, 0, 0.01);
     cursor: pointer;
+    position: relative;
+    margin-top: 5px;
 }
 
 .dropdown-logo {
-    margin: 11px;
+    display: block;
+    width: 40px;
+    height: 40px;
+    background-image: url(settings.svg);
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
+.dropdown-content{
+    padding: 5px 0;
+}
+/*
 .dropdown-content {
     position: absolute;
-    margin-top: 45px;
+    margin-top: 5px;
     right: 10px;
     min-width: 316px;
     z-index: 99;
     background: var(--settings-drop-down-background-color);
     box-shadow: 0 4px 4px rgba(0, 0, 0, 0.01);
     border-radius: 5px;
+}*/
+
+@media(min-width: 600px){
+    .dropdown{
+        display: block;
+    }
+
+    .dropdown-content {
+        position: absolute;
+        margin-top: 5px;
+        right: 10px;
+        min-width: 316px;
+        z-index: 99;
+        background: var(--settings-drop-down-background-color);
+        box-shadow: 0 4px 4px rgba(0, 0, 0, 0.01);
+        border-radius: 5px;
+    }
+
+    .dropdown-content a{
+        line-height: 10px;
+    }
 }
