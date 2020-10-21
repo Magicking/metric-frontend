@@ -1,29 +1,40 @@
 <main>
     <header class="header">
         <!-- <div class="notice">DEVELOPMENT PREVIEW</div> -->
-        <div class="header-logo header-left">
+        <div class="header-logo">
             <a href="/">
                 <div class="brand-logo"></div>
             </a>
         </div>
-        <div class="header-links" id="top-nav">
-            <a href="https://metric.exchange/">Swap</a>
-            <a href="https://stake.metric.exchange/">Farm</a>
-            <a href="https://medium.com/@BUILD_Finance/introducing-metric-community-owned-dex-aggregator-a1cff8b8100d" target="_blank">About</a>
-        </div>
-        <div class="header-settings header-right">
-            <blocky/>
-            <settings/>
-        </div>
+
+        <input type="checkbox" class="menu-btn" id="menu-btn" />
+        <label for="menu-btn" class="menu-icon" id="main-toggle"><span class="nav-icon"></span></label>        
+
+        <ul class="menu-nav">
+            <li>
+                <ul class="header-links" id="top-nav">
+                    <li><a href="https://metric.exchange/">Swap</a></li>
+                    <li><a href="https://stake.metric.exchange/">Farm</a></li>
+                    <li><a href="https://medium.com/@BUILD_Finance/introducing-metric-community-owned-dex-aggregator-a1cff8b8100d" target="_blank">About</a></li>
+                </ul>
+                <hr/>
+                <ul class="header-settings">
+                    <li><blocky/></li>
+                    <li><settings/></li>
+                </ul>
+            </li>
+        </ul>
     </header>
 
     <swap/>
 
     <div id="footer">
-        <a href="http://letsbuild.finance/" target="_blank">By BUILD Finance</a>
-        <a href="https://twitter.com/metricexchange" target="_blank">Twitter</a>
-        <a href="https://discord.gg/FN3sNSE" target="_blank">Discord</a>
-        <a href="https://medium.com/@BUILD_Finance" target="_blank">Medium</a>
+        <ul class="footer-content">
+            <li><a href="http://letsbuild.finance/" target="_blank">By BUILD Finance</a></li>
+            <li><a href="https://twitter.com/metricexchange" target="_blank">Twitter</a></li>
+            <li><a href="https://discord.gg/FN3sNSE" target="_blank">Discord</a></li>
+            <li><a href="https://medium.com/@BUILD_Finance" target="_blank">Medium</a></li>
+        </ul>
     </div>
 
     <script>
