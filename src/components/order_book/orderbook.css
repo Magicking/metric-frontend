@@ -6,6 +6,8 @@
     margin-top: 20px;
     text-align: center;
     justify-items: center;
+    border: 1px solid red;
+    
 }
 
 #order-book-title {
@@ -20,7 +22,8 @@
 }
 
 .orders {
-    width: 450px;
+    min-width: 250px;
+    max-width: 450px;
     font-size: 14px;
     text-align: center;
     line-height: 25px;

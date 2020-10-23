@@ -15,6 +15,7 @@ body {
     padding: 0;
     padding-bottom: 120px;
     padding-top:50px;
+    width:100%;
 }
 
 a {
@@ -38,6 +39,7 @@ a {
    position: fixed;
    top: 0;
    z-index: 1000;
+   background-color: var(--main-background-color);
 }
 
 #menu-btn{
@@ -254,4 +256,10 @@ a {
         line-height: 50px;
         padding-left: 20px;
      }
+}
+
+.main-content{
+    width: 100%;
+    
+    position: relative;
 }

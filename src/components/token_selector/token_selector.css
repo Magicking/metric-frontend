@@ -3,10 +3,12 @@
 
 #token-selector .box {
     position: absolute;
-    top: 80px;
+    top: -100px;
     left: 50%;
-    margin-left: -200px;
-    width: 400px;
+    transform: translateX(-50%);
+    
+    max-width: 400px;
+    min-width: 290px;
     height: 620px;
     background: var(--token-selector-box-background-color);
     border-radius: 5px;
@@ -15,12 +17,12 @@
 }
 
 #token-selector .wrapper {
-    padding: 30px 30px 0;
+    padding: 30px 10px 0;
 }
 
 #token-selector .img {
     width: 30px;
-    padding-left: 30px;
+    padding-left: 10px;
 }
 
 #token-selector .close {
@@ -62,7 +64,7 @@
 
 #token-selector .balance {
     text-align: right;
-    padding-right: 30px;
+    padding-right: 10px;
 }
 
 #token-selector .symbol {
