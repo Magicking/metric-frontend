@@ -1,10 +1,11 @@
 @import '../theme_colors/colors.css';
 
 #swap-form {
-  margin: 0 auto;
+  margin:auto;
   margin-top: 150px;
   border-radius: 5px;
-  width: 340px;
+  max-width: 340px;
+  
   padding: 30px;
   background: var(--swap-form-background-color);
   border: 1px solid var(--swap-from-border-color);
