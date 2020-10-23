@@ -1,10 +1,15 @@
+@import '../theme_colors/colors.css';
 
 .theme-switch-line {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
     display: flex;
     padding-left: 15px;
 }
 
 .theme-switch-line-group {
+    display: -ms-grid;
     display: grid;
     grid-auto-flow: column;
     grid-column-gap: 15px;
@@ -18,7 +23,8 @@
     width: 50px;
 
     background: var(--theme-switch-button-background-color);
-    border-radius: 10px;
+    -webkit-border-radius: 10px;
+            border-radius: 10px;
 
     text-decoration: none;
     text-align: center;
@@ -36,6 +42,8 @@
     color: var(--theme-switch-active-button-text-color);
     background: var(--theme-switch-active-button-background-color);
     border: 1px solid var(--theme-switch-active-button-border-color);
-    box-sizing: border-box;
-    border-radius: 10px;
+    -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+    -webkit-border-radius: 10px;
+            border-radius: 10px;
 }
