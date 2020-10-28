@@ -20,7 +20,7 @@
 }
 
 #token-selector .wrapper {
-    padding: 30px 10px 0;
+    padding: 30px 30px 0;
 }
 
 #token-selector .img {
@@ -47,6 +47,7 @@
 #token-selector .tokens {
     height: 500px;
     overflow: auto;
+    margin: 0 30px;
 }
 
 #token-selector table {
