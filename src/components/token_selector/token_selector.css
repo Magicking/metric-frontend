@@ -2,12 +2,14 @@
 
 #token-selector .box {
     position: absolute;
+    display: block;
     top: -100px;
     left: 50%;
     -webkit-transform: translateX(-50%);
         -ms-transform: translateX(-50%);
             transform: translateX(-50%);    
     max-width: 400px;
+    width:100%;
     min-width: 290px;
     height: 620px;
     background: var(--token-selector-box-background-color);
@@ -70,7 +72,7 @@
 }
 
 #token-selector .symbol {
-    text-align: left;
+    text-align: left;    
 }
 
 #token-selector input[type=text] {
