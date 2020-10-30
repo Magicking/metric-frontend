@@ -1,19 +1,5 @@
 @import "../theme_colors/colors.css";
 
-
-#token-selector .box {
-    position: absolute;
-    top: 80px;
-    left: 50%;
-    margin-left: -200px;
-    width: 400px;
-    height: 620px;
-    background: var(--token-selector-box-background-color);
-    border-radius: 5px;
-    border: 1px solid var(--token-selector-box-border-color);
-    color: var(--token-selector-box-text-color)  ;
-}
-
 #token-selector .wrapper {
     padding: 30px 30px 0;
 }
@@ -40,6 +26,11 @@
 
 #token-selector .tokens {
     height: 500px;
+    overflow: auto;
+}
+
+.dashboard #token-selector .tokens {
+    height: 400px;
     overflow: auto;
 }
 

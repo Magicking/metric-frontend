@@ -1,26 +1,27 @@
 @import "../theme_colors/colors.css";
 
-#order-book {
+.order-book {
     display: grid;
     align-items: center;
-    margin-top: 20px;
     text-align: center;
     justify-items: center;
-}
-
-#order-book-title {
-    font-family: "Inter", monospace;
-    font-size: 14px;
-    line-height: 32px;
+    grid-row: 1;
+    grid-column: 2;
+    height: 516px;
+    width: 455px;
+    background-color: var(--token-selector-background-color);
+    border-radius: 10px;
+    box-shadow: 0 1px 5px 1px rgba(0, 0, 0, 0.05);
 }
 
 #order-table-canvas {
-    height: 340px;
+    height: 500px;
+    width: 420px;
     overflow-y: scroll;
 }
 
 .orders {
-    width: 450px;
+    width: 410px;
     font-size: 14px;
     text-align: center;
     line-height: 25px;
@@ -46,6 +47,7 @@
     font-size: 13px;
     text-align: center;
     line-height: 40px;
+    font-weight: normal;
     color: var(--token-selector-table-text-color);
-    background: var(--main-background-color);
+    background: var(--token-selector-background-color);
 }

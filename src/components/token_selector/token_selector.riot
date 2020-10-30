@@ -1,20 +1,18 @@
 <token-selector>
 
     <div id="token-selector">
-        <div class="box">
-            <div class="wrapper">
-                <div class="close"><img src={ config.closeImage } onclick={ this.cleanUpAndClose }></div>
-                <input type="text" placeholder="Search symbol or paste address" oninput={ filterTokenSearch }>
-            </div>
-            <div class="tokens">
-                <table>
-                    <tr each={ token in state.filteredTokens } key={ token.symbol } onclick={ fetchTokenInfo }>
-                        <td class="img"><img src="{ fetchTokenLogoURI(token) }" alt=" " onerror={ changeLogoToDefault }></td>
-                        <td class="symbol">{ token.symbol }</td>
-                        <td class="balance">{ this.round(token.balance, 4) }</td>
-                    </tr>
-                </table>
-            </div>
+        <div class="wrapper">
+            <div class="close"><img src={ config.closeImage } onclick={ this.cleanUpAndClose }></div>
+            <input type="text" placeholder="Search symbol or paste address" oninput={ filterTokenSearch }>
+        </div>
+        <div class="tokens">
+            <table>
+                <tr each={ token in state.filteredTokens } key={ token.symbol } onclick={ fetchTokenInfo }>
+                    <td class="img"><img src="{ fetchTokenLogoURI(token) }" alt=" " onerror={ changeLogoToDefault }></td>
+                    <td class="symbol">{ token.symbol }</td>
+                    <td class="balance">{ this.round(token.balance, 4) }</td>
+                </tr>
+            </table>
         </div>
     </div>
 

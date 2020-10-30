@@ -23,7 +23,20 @@ export const ZeroXOrdersProxy = {
         await Erc20ContractProxy.approveTokenForTargetAddress(tokenAddress, zeroXAllowanceTargetAddress)
     },
 
-    submitOrder: submitOrder
+    submitOrder: submitOrder,
+
+    cancelOrder: cancelOrder
+}
+
+async function cancelOrder(order) {
+    let chainId = await providerUtils.getChainIdAsync(getProvider())
+    let contractWrappers = new ContractWrappers(getProvider(), {
+        chainId: chainId,
+    });
+
+    return contractWrappers.exchange
+            .cancelOrder(order.order)
+            .awaitTransactionSuccessAsync({ from: accountAddress() })
 }
 
 async function submitOrder(order, referralAddress, feePercentage) {

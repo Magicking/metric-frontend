@@ -1,0 +1,107 @@
+<order-list>
+
+    <div class="order-list-title">MY ORDERS</div>
+    <div class="order-list-canvas">
+        <table class="my-orders">
+            <thead>
+            <tr>
+                <th>Price { props.outputToken.symbol }</th>
+                <th>Amount { props.inputToken.symbol }</th>
+                <th>Total { props.outputToken.symbol } </th>
+                <th>Expires in</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr each={ order in state.asks } key={ order.metaData.orderHash } id={ order.metaData.orderHash }>
+                <td>{ parseFloat(order.order.takerAssetAmount / order.order.makerAssetAmount).toFixed(3) }</td>
+                <td>{ (order.order.makerAssetAmount / (10 ** props.inputToken.decimals)).toFixed(3)  }</td>
+                <td>{ (order.order.takerAssetAmount / (10 ** props.outputToken.decimals)).toFixed(3)  }</td>
+                <td>{ getDateDiff(order.order.expirationTimeSeconds) }</td>
+                <td class="cancel-order" onclick={ this.cancelOrder }>Cancel</td>
+            </tr>
+            <tr each={ order in state.bids } key={ order.metaData.orderHash } id={ order.metaData.orderHash }>
+                <td>{ parseFloat(order.order.makerAssetAmount / order.order.takerAssetAmount).toFixed(3) }</td>
+                <td>{ (order.order.takerAssetAmount / (10 ** props.outputToken.decimals)).toFixed(3)  }</td>
+                <td>{ (order.order.makerAssetAmount / (10 ** props.inputToken.decimals)).toFixed(3)  }</td>
+                <td>{ getDateDiff(order.order.expirationTimeSeconds) }</td>
+                <td class="cancel-order" onclick={ this.cancelOrder }>Cancel</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        import './order_list.css'
+        import { ZeroXOrdersProxy } from '../../common/0x_orders_proxy'
+        import {assetDataUtils} from "@0x/order-utils";
+        import {accountAddress} from "../../common/wallet_manager";
+
+        export default {
+            state:{
+                asks: [],
+                bids: []
+            },
+
+            async onBeforeUpdate(props) {
+
+                let inputTokenAddress = assetDataUtils.encodeERC20AssetData(props.inputToken.address)
+                let outputTokenAddress = assetDataUtils.encodeERC20AssetData(props.outputToken.address)
+
+                this.state.asks = (await ZeroXOrdersProxy.get0xMeshOrderBook()
+                    .getOrdersAsync(
+                        inputTokenAddress,
+                        outputTokenAddress
+                    ))
+                    .filter(order => order.order.makerAddress.toLowerCase() === accountAddress().toLowerCase())
+
+                this.state.bids = (await ZeroXOrdersProxy.get0xMeshOrderBook()
+                    .getOrdersAsync(
+                        outputTokenAddress,
+                        inputTokenAddress
+                    ))
+                    .filter(order => order.order.makerAddress.toLowerCase() === accountAddress().toLowerCase())
+            },
+
+            async cancelOrder(e) {
+                let orderHash = e.target.parentElement.getAttribute("id")
+                let order = this.state.bids.concat(this.state.asks).find(o => o.metaData.orderHash === orderHash)
+
+                await ZeroXOrdersProxy.cancelOrder(order)
+
+                console.log("cancel order", order)
+            },
+
+            getDateDiff(timestampSeconds) {
+                let now = new Date();
+                let expiryDate = new Date(timestampSeconds * 1000);
+
+                let diffm = Math.trunc((expiryDate - now) / ( 60 * 1000));
+                let diffH = Math.trunc(diffm / 60);
+                let diffD = Math.trunc(diffH / 24);
+                let diffM = Math.trunc(diffD / 30);
+                let diffY = Math.trunc(diffM / 12);
+
+                let formattedDiff = ""
+                if (diffY > 0) {
+                    formattedDiff = formattedDiff.concat(`${diffY}y`)
+                }
+                if (diffM - diffY*12 > 0) {
+                    formattedDiff = formattedDiff.concat(' ', `${diffM - diffY*12}m`)
+                }
+                if (diffD - diffM*30 > 0) {
+                    formattedDiff = formattedDiff.concat(' ', `${diffD - diffM*30}d`)
+                }
+                if (diffH - diffD*24 > 0) {
+                    formattedDiff = formattedDiff.concat(' ', `${diffH - diffD*24}h`)
+                }
+                if (diffm - diffH*60 > 0) {
+                    formattedDiff = formattedDiff.concat(' ', `${diffm - diffH*60}m`)
+                }
+
+                return formattedDiff
+            }
+        }
+
+    </script>
+
+</order-list>

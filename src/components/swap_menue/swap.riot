@@ -1,72 +1,77 @@
 <swap>
 
-  <div id="swap-form">
+  <div id="dashboard">
 
-    <div class="section" if={ isOrderBookFeatureEnabled() }>
-      <div class="trade-options">
-        <div class={ state.isLimitOrder ? "trade-option-button" : "trade-option-active-button" } onclick={ switchToQuickSwap }>Quick Swap</div>
-        <div>/</div>
-        <div class={ state.isLimitOrder ? "trade-option-active-button" :  "trade-option-button" } onclick={ switchToLimitOrder }>Limit orders</div>
+    <div id="swap-form">
+
+      <div class="section">
+        <div class="direction-title">
+          <div>From</div>
+          <div class="balance-link" onclick={ balanceClickInputAmount } if={state.inputToken !== null && state.inputToken.balance > 0}>Balance: {this.round(state.inputToken.balance, 4)}</div>
+        </div>
+        <div class="input-container">
+          <label class="currency" onclick={ openInputSelector }>{ inputSymbol() }</label>
+          <input type="number" class="input-amount" value={ this.round(state.inputAmount, 4) } onkeyup={ updateInputAmount } placeholder="0">
+          <div class="direction-title usd-price">{state.inputTokenUsd === 0 ? null : state.inputTokenUsd}</div>
+        </div>
       </div>
+
+      <div class="section switch">
+        <div class="switch-button-image" onclick={ switchDirection }></div>
+      </div>
+
+      <div class="section">
+        <div class="direction-title">
+          <div>To</div>
+          <div if= { isOutputDefined() && state.outputToken.balance > 0 }>Balance: { this.round(state.outputToken.balance, 4)}</div>
+        </div>
+        <div class="input-container">
+          <label class="currency" onclick={ openOutputSelector }>{ outputSymbol() }</label>
+          <input type="number" id="output-token-field" class="output-amount" value={ outputAmount() } onkeyup={ updateOutputAmount } placeholder="0">
+          <div class="direction-title usd-price">{state.outputTokenUsd === 0 ? null : state.outputTokenUsd}</div>
+        </div>
+      </div>
+
+      <div class="swap-button" onclick={ buttonAction }>{ buttonText() }</div>
     </div>
 
-    <div class="section">
-      <div class="direction-title">
-        <div>From</div>
-        <div class="balance-link" onclick={ balanceClickInputAmount } if={state.inputToken !== null && state.inputToken.balance > 0}>Balance: {this.round(state.inputToken.balance, 4)}</div>
-      </div>
-      <div class="input-container">
-        <label class="currency" onclick={ openInputSelector }>{ inputSymbol() }</label>
-        <input type="number" class="input-amount" value={ this.round(state.inputAmount, 4) } onkeyup={ updateInputAmount } placeholder="0">
-        <div class="direction-title usd-price">{state.inputTokenUsd === 0 ? null : state.inputTokenUsd}</div>
-      </div>
+    <swap-price
+              if="{ canOutput() && state.isLimitOrder === false && state.conversionRate !== undefined }"
+              inputToken={ state.inputToken }
+              outputToken={ state.outputToken }
+              conversionRate={ state.conversionRate }
+              amount={ state.inputAmount }
+              metricBalance={ fetchMetricBalance() }
+      />
+
+    <div class="order-book" if={ state.isLimitOrder && state.outputToken !== null && state.inputToken !== null }>
+      <order-book
+              inputToken = { state.inputToken }
+              outputToken = { state.outputToken }
+      />
     </div>
 
-    <div class="section switch">
-      <div class="switch-button-image" onclick={ switchDirection }></div>
+    <div class="order-list" if={ state.isLimitOrder && state.outputToken !== null && state.inputToken !== null }>
+      <order-list
+              inputToken = { state.inputToken }
+              outputToken = { state.outputToken }
+      />
     </div>
 
-    <div class="section">
-      <div class="direction-title">
-        <div>To</div>
-        <div if= { isOutputDefined() && state.outputToken.balance > 0 }>Balance: { this.round(state.outputToken.balance, 4)}</div>
-      </div>
-      <div class="input-container">
-        <label class="currency" onclick={ openOutputSelector }>{ outputSymbol() }</label>
-        <input type="number" id="output-token-field" class="output-amount" value={ outputAmount() } onkeyup={ updateOutputAmount } placeholder="0" disabled>
-        <div class="direction-title usd-price">{state.outputTokenUsd === 0 ? null : state.outputTokenUsd}</div>
-      </div>
+    <div id="selector-box" style={ (state.showTokenSelector) ? "display:block" : "display:none" }>
+      <token-selector
+              closeTokenSelector={ closeTokenSelector }
+              selectToken={ selectToken }
+      />
     </div>
-
-    <div class="swap-button" onclick={ buttonAction }>{ buttonText() }</div>
   </div>
-
-  <swap-price
-          if="{ canOutput() && state.isLimitOrder === false && state.conversionRate !== undefined }"
-          inputToken={ state.inputToken }
-          outputToken={ state.outputToken }
-          conversionRate={ state.conversionRate }
-          amount={ state.inputAmount }
-          metricBalance={ fetchMetricBalance() }
-  />
-
-  <order-book
-          if={ state.isLimitOrder && state.outputToken !== null && state.inputToken !== null }
-          inputToken = { state.inputToken }
-          outputToken = { state.outputToken }
-  />
-
-  <token-selector
-          style={ (state.showTokenSelector) ? "display:block" : "display:none" }
-          closeTokenSelector={ closeTokenSelector }
-          selectToken={ selectToken }
-  />
 
   <script>
     import './swap.css'
     import OrderBook from '../order_book/orderbook.riot'
     import SwapPrice from '../swap_price/swap_price.riot'
     import TokenSelector from '../token_selector/token_selector.riot'
+    import OrderList from '../order_list/order_list.riot'
     import { getTokenUsdPrice } from '../../common/token_price_proxy'
     import { ZeroXOrdersProxy } from '../../common/0x_orders_proxy'
     import { OneSplitContactProxy } from '../../common/one_split_contract_proxy'
@@ -78,7 +83,8 @@
       components: {
         OrderBook,
         SwapPrice,
-        TokenSelector
+        TokenSelector,
+        OrderList
       },
 
       config: {
@@ -100,11 +106,6 @@
 
       onBeforeUpdate() {
 
-        if (this.state.inputToken === null) {
-          let token = this.tokensList().find(t => t.symbol.toLowerCase() === "eth")
-          this.state.inputToken = token === undefined ? null : token
-        }
-
         if (this.state.inputToken !== null) {
           let updateInputToken = this.tokensList().find(t => t.symbol === this.state.inputToken.symbol)
           if (updateInputToken !== undefined) {
@@ -121,7 +122,26 @@
 
       },
 
+      onBeforeMount() {
+        if (this.state.inputToken === null) {
+          let token = this.tokensList().find(t => t.symbol.toLowerCase() === "metric")
+          this.state.inputToken = token === undefined ? null : token
+        }
+
+        if (this.state.outputToken === null) {
+          let token = this.tokensList().find(t => t.symbol.toLowerCase() === "build")
+          this.state.outputToken = token === undefined ? null : token
+        }
+
+        if (this.isOrderBookFeatureEnabled()) {
+          this.state.isLimitOrder = true
+        }
+      },
+
       onMounted() {
+
+        this.switchOrderType(!this.state.isLimitOrder)
+
         this.updatePriceAndReschedule()
       },
 
@@ -409,8 +429,21 @@
       },
 
       switchOrderType(isSwap){
+
         this.state.isLimitOrder = !isSwap
+
         document.getElementById("output-token-field").disabled = isSwap
+
+        if (this.state.isLimitOrder) {
+          console.log("set class")
+          document.getElementById("dashboard").classList.toggle("dashboard")
+          document.getElementById("swap-form").classList.toggle("order-form")
+          document.getElementById("selector-box").classList.toggle("order-box")
+        } else {
+          document.getElementById("selector-box").classList.toggle("swap-box")
+          document.getElementById("swap-form").classList.toggle("swap-form")
+        }
+
         this.update()
       },
       calculateMetricFee() {

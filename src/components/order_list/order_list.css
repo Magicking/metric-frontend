@@ -1,0 +1,48 @@
+.order-list{
+    grid-row: 2;
+    grid-column: 1 / span 2;
+    background-color: var(--token-selector-background-color);
+    border-radius: 10px;
+    padding: 20px;
+    height: 275px;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 14px;
+    box-shadow: 0 1px 5px 1px rgba(0, 0, 0, 0.05);
+}
+
+.order-list-title {
+    color: var(--token-selector-table-text-color);
+    font-size: 14px;
+    line-height: 32px;
+}
+
+.my-orders {
+    width: 100%;
+    font-size: 14px;
+    line-height: 25px;
+}
+
+.my-orders thead th {
+    font-size: 14px;
+    line-height: 40px;
+    text-align: left;
+    color: var(--token-selector-table-text-color);
+    margin-bottom: 5px;
+    font-weight: normal;
+
+    position: sticky;
+    top: 0;
+    background: var(--token-selector-background-color);
+}
+
+.order-list-canvas {
+    height: 240px;
+    overflow-y: scroll;
+}
+
+.cancel-order {
+    cursor: pointer;
+    color: var(--main-text-color);
+    text-decoration: underline;
+}
