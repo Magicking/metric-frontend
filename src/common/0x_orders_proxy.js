@@ -1,17 +1,13 @@
-import {Orderbook} from "@0x/orderbook";
-import {BigNumber, providerUtils } from '@0x/utils';
-import {orderFactory} from '@0x/order-utils/lib/src/order_factory';
-import {assetDataUtils} from '0x.js'
-import {accountAddress} from './wallet_manager'
-import {getContractAddressesForChainOrThrow} from "@0x/contract-addresses";
-import {Erc20ContractProxy} from "./erc20_contract_proxy";
-import {ContractWrappers} from "@0x/contract-wrappers"
-import { Web3Wrapper } from '@0x/web3-wrapper';
+import { BigNumber, providerUtils } from '@0x/utils';
+import { orderFactory } from '@0x/order-utils/lib/src/order_factory';
+import { accountAddress } from './wallet_manager'
+import { getContractAddressesForChainOrThrow } from "@0x/contract-addresses";
+import { Erc20ContractProxy } from "./erc20_contract_proxy";
+import { ContractWrappers } from "@0x/contract-wrappers"
 import { MetamaskSubprovider } from '@0x/subproviders';
+import { HttpClient } from '@0x/connect';
 
 export const ZeroXOrdersProxy = {
-
-    get0xMeshOrderBook: function() { return orderBook },
 
     is0xApprovedForToken: async function(address, amount) {
         let zeroXAllowanceTargetAddress = await zeroXContractAddresses().then(a => a.erc20Proxy)
@@ -25,16 +21,14 @@ export const ZeroXOrdersProxy = {
 
     submitOrder: submitOrder,
 
-    cancelOrder: cancelOrder
+    cancelOrder: cancelOrder,
+
+    getContractWrapper: getContractWrapper
 }
 
 async function cancelOrder(order) {
-    let chainId = await providerUtils.getChainIdAsync(getProvider())
-    let contractWrappers = new ContractWrappers(getProvider(), {
-        chainId: chainId,
-    });
-
-    return contractWrappers.exchange
+    let contractWrapper = await getContractWrapper()
+    return contractWrapper.exchange
             .cancelOrder(order.order)
             .awaitTransactionSuccessAsync({ from: accountAddress() })
 }
@@ -46,18 +40,26 @@ async function submitOrder(order, referralAddress, feePercentage) {
 
     if (unfilledTakerAmount.isGreaterThan(0)) {
 
+        let contractWrapper = await getContractWrapper()
+
         let unfilledMakerAmount =
             order.makerAssetAmount
                 .multipliedBy(unfilledTakerAmount)
                 .dividedBy(order.takerAssetAmount)
 
+        const makerAssetData =
+            await contractWrapper.devUtils.encodeERC20AssetData(order.makerAssetAddress).callAsync();
+
+        const takerAssetData =
+            await contractWrapper.devUtils.encodeERC20AssetData(order.takerAssetAddress).callAsync();
+
         let signedOrder = await orderFactory.createSignedOrderAsync(
             getProvider(),
             accountAddress(),
             unfilledMakerAmount,
-            assetDataUtils.encodeERC20AssetData(order.makerAssetAddress),
+            makerAssetData,
             unfilledTakerAmount,
-            assetDataUtils.encodeERC20AssetData(order.takerAssetAddress),
+            takerAssetData,
             await zeroXContractAddresses().then(a => a.exchange),
             {
                 makerFee: (unfilledMakerAmount * feePercentage).toString(),
@@ -66,18 +68,15 @@ async function submitOrder(order, referralAddress, feePercentage) {
             }
         )
 
-        await orderBook.addOrdersAsync([signedOrder])
+        await new HttpClient("https://api.0x.org/sra/v3").submitOrderAsync(signedOrder)
     }
 }
 
 async function tryMatchOrder(order) {
-    let chainId = await providerUtils.getChainIdAsync(getProvider())
-    let contractWrappers = new ContractWrappers(getProvider(), {
-        chainId: chainId,
-    });
-    let web3Wrapper = new Web3Wrapper(getProvider())
 
     let candidateFillOrders = await findCandidateOrders(order)
+
+    let contractWrapper = await getContractWrapper()
 
     if (candidateFillOrders.length > 0) {
 
@@ -85,7 +84,7 @@ async function tryMatchOrder(order) {
         let candidateFillOrdersSignatures = candidateFillOrders.map(o => o.signature)
 
         let gasPriceWei = await window.web3.eth.getGasPrice()
-        let protocolFeeMultiplier = await contractWrappers.exchange.protocolFeeMultiplier().callAsync()
+        let protocolFeeMultiplier = await contractWrapper.exchange.protocolFeeMultiplier().callAsync()
         let callData = {
             from: accountAddress(),
             gasPrice: gasPriceWei,
@@ -93,7 +92,7 @@ async function tryMatchOrder(order) {
         }
 
         let fillOrderFunction =
-            await contractWrappers
+            await contractWrapper
                 .exchange
                 .batchFillOrdersNoThrow(
                     candidateFillOrders,
@@ -113,12 +112,16 @@ async function tryMatchOrder(order) {
 }
 
 async function findCandidateOrders(order) {
-
+    let contractWrapper = await getContractWrapper()
     let limitOrderPrice = order.makerAssetAmount.dividedBy(order.takerAssetAmount)
-    let orders = await orderBook.getOrdersAsync(
-        assetDataUtils.encodeERC20AssetData(order.takerAssetAddress),
-        assetDataUtils.encodeERC20AssetData(order.makerAssetAddress)
-    )
+
+    const makerAssetData =
+        await contractWrapper.devUtils.encodeERC20AssetData(order.makerAssetAddress).callAsync();
+
+    const takerAssetData =
+        await contractWrapper.devUtils.encodeERC20AssetData(order.takerAssetAddress).callAsync();
+
+    let orders = await orderBook.getOrdersAsync(makerAssetData, takerAssetData)
 
     let orderUnfilledAmount = order.takerAssetAmount
     let candidateFillOrders = []
@@ -142,17 +145,6 @@ async function findCandidateOrders(order) {
     return candidateFillOrders
 }
 
-function initOrderBook() {
-    return Orderbook.getOrderbookForPollingProvider({
-        httpEndpoint : "https://api.0x.org/sra/v3",
-        pollingIntervalMs: 10000
-    })
-}
-
-function initProvider() {
-    providerEngine = new MetamaskSubprovider(window.web3.currentProvider)
-}
-
 async function zeroXContractAddresses() {
     let chainId = await providerUtils.getChainIdAsync(getProvider())
     return getContractAddressesForChainOrThrow(chainId)
@@ -165,5 +157,20 @@ function getProvider() {
     return providerEngine
 }
 
-let orderBook = initOrderBook()
+function initProvider() {
+    providerEngine = new MetamaskSubprovider(window.web3.currentProvider)
+}
+
+async function getContractWrapper() {
+    if (contractWrapper === null) {
+        let chainId = await providerUtils.getChainIdAsync(getProvider())
+        contractWrapper = new ContractWrappers(getProvider(), {
+            chainId: chainId,
+        });
+    }
+
+    return contractWrapper
+}
+
 let providerEngine = null
+let contractWrapper = null

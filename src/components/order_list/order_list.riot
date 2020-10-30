@@ -32,9 +32,8 @@
 
     <script>
         import './order_list.css'
-        import { ZeroXOrdersProxy } from '../../common/0x_orders_proxy'
-        import {assetDataUtils} from "@0x/order-utils";
         import {accountAddress} from "../../common/wallet_manager";
+        import {getOrderBookAsks, getOrderBookBids} from "../../common/0x_order_book_proxy";
 
         export default {
             state:{
@@ -42,24 +41,15 @@
                 bids: []
             },
 
-            async onBeforeUpdate(props) {
+            onBeforeUpdate(props) {
 
-                let inputTokenAddress = assetDataUtils.encodeERC20AssetData(props.inputToken.address)
-                let outputTokenAddress = assetDataUtils.encodeERC20AssetData(props.outputToken.address)
+                this.state.asks =
+                    getOrderBookAsks()
+                        .filter(order => order.order.makerAddress.toLowerCase() === accountAddress().toLowerCase())
 
-                this.state.asks = (await ZeroXOrdersProxy.get0xMeshOrderBook()
-                    .getOrdersAsync(
-                        inputTokenAddress,
-                        outputTokenAddress
-                    ))
-                    .filter(order => order.order.makerAddress.toLowerCase() === accountAddress().toLowerCase())
-
-                this.state.bids = (await ZeroXOrdersProxy.get0xMeshOrderBook()
-                    .getOrdersAsync(
-                        outputTokenAddress,
-                        inputTokenAddress
-                    ))
-                    .filter(order => order.order.makerAddress.toLowerCase() === accountAddress().toLowerCase())
+                this.state.bids =
+                    getOrderBookBids()
+                        .filter(order => order.order.makerAddress.toLowerCase() === accountAddress().toLowerCase())
             },
 
             async cancelOrder(e) {
@@ -67,8 +57,6 @@
                 let order = this.state.bids.concat(this.state.asks).find(o => o.metaData.orderHash === orderHash)
 
                 await ZeroXOrdersProxy.cancelOrder(order)
-
-                console.log("cancel order", order)
             },
 
             getDateDiff(timestampSeconds) {

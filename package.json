@@ -17,7 +17,7 @@
     "parcel-bundler": "^1.12.4"
   },
   "dependencies": {
-    "0x.js": "^9.2.0",
+    "@0x/connect": "^6.0.9",
     "@0x/contract-addresses": "^4.12.0",
     "@0x/contract-wrappers": "^13.9.0",
     "@0x/order-utils": "^10.3.0",

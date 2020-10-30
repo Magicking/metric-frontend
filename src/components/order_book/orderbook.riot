@@ -27,8 +27,7 @@
 
     <script>
         import './orderbook.css'
-        import { ZeroXOrdersProxy } from '../../common/0x_orders_proxy'
-        import { assetDataUtils } from '0x.js'
+        import {getOrderBookAsks, getOrderBookBids} from "../../common/0x_order_book_proxy";
 
         export default {
             config: {
@@ -54,42 +53,25 @@
             disableScrollToView() {
                 this.state.triggerScrollToView = false
             },
-            async fetchOrderBook(inputToken, outputToken) {
+            fetchOrderBook(inputToken, outputToken) {
 
                 if (inputToken !== null && outputToken !== null) {
 
-                    let inputTokenAddress = assetDataUtils.encodeERC20AssetData(inputToken.address)
-                    let outputTokenAddress = assetDataUtils.encodeERC20AssetData(outputToken.address)
-
                     let asks =
-                        await ZeroXOrdersProxy.get0xMeshOrderBook()
-                            .getOrdersAsync(
-                                inputTokenAddress,
-                                outputTokenAddress
-                            ).then( orders => {
-                                    return orders.map(b => {
-                                        return {
-                                            makerAssetAmount: parseFloat((parseInt(b.order.takerAssetAmount) / (10 ** outputToken.decimals))),
-                                            takerAssetAmount: parseFloat(parseInt(b.order.makerAssetAmount) / (10 ** inputToken.decimals))
-                                        }
-                                    })
-                                }
-                            )
+                        getOrderBookAsks().map(b => {
+                            return {
+                                makerAssetAmount: parseFloat((parseInt(b.order.takerAssetAmount) / (10 ** outputToken.decimals))),
+                                takerAssetAmount: parseFloat(parseInt(b.order.makerAssetAmount) / (10 ** inputToken.decimals))
+                            }
+                        })
 
                     let bids =
-                        await ZeroXOrdersProxy.get0xMeshOrderBook()
-                            .getOrdersAsync(
-                                outputTokenAddress,
-                                inputTokenAddress
-                            ).then( orders => {
-                                    return orders.map(b => {
-                                        return {
-                                            makerAssetAmount: parseFloat((parseInt(b.order.makerAssetAmount) / (10 ** outputToken.decimals))),
-                                            takerAssetAmount: parseFloat(parseInt(b.order.takerAssetAmount) / (10 ** inputToken.decimals))
-                                        }
-                                    })
-                                }
-                            )
+                        getOrderBookBids().map(b => {
+                            return {
+                                makerAssetAmount: parseFloat((parseInt(b.order.makerAssetAmount) / (10 ** outputToken.decimals))),
+                                takerAssetAmount: parseFloat(parseInt(b.order.takerAssetAmount) / (10 ** inputToken.decimals))
+                            }
+                        })
 
                     Array.prototype.sumByPrice = function() {
                         return Object.values(this.reduce(function(groups, item) {

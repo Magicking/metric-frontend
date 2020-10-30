@@ -75,8 +75,8 @@
     import { getTokenUsdPrice } from '../../common/token_price_proxy'
     import { ZeroXOrdersProxy } from '../../common/0x_orders_proxy'
     import { OneSplitContactProxy } from '../../common/one_split_contract_proxy'
-    import { Erc20ContractProxy } from '../../common/erc20_contract_proxy'
     import { BigNumber } from '@0x/utils';
+    import {setBaseTokenAddress, setQuoteTokenAddress} from "../../common/0x_order_book_proxy";
 
     export default {
 
@@ -110,6 +110,9 @@
           let updateInputToken = this.tokensList().find(t => t.symbol === this.state.inputToken.symbol)
           if (updateInputToken !== undefined) {
             this.state.inputToken.balance = updateInputToken.balance
+            if (this.state.isLimitOrder) {
+              setBaseTokenAddress(updateInputToken.address)
+            }
           }
         }
 
@@ -117,6 +120,9 @@
           let updateOutputToken = this.tokensList().find(t => t.symbol === this.state.outputToken.symbol)
           if (updateOutputToken !== undefined) {
             this.state.outputToken.balance = updateOutputToken.balance
+            if (this.state.isLimitOrder) {
+              setQuoteTokenAddress(updateOutputToken.address)
+            }
           }
         }
 
@@ -124,7 +130,7 @@
 
       onBeforeMount() {
         if (this.state.inputToken === null) {
-          let token = this.tokensList().find(t => t.symbol.toLowerCase() === "metric")
+          let token = this.tokensList().find(t => t.symbol.toLowerCase() === "eth")
           this.state.inputToken = token === undefined ? null : token
         }
 
@@ -167,8 +173,14 @@
 
         if (this.state.pendingTokenSelection === "input") {
           this.update({ inputToken: token, inputTokenUsd: 0, inputAmount: 0 })
+          if (this.state.isLimitOrder) {
+            setBaseTokenAddress(token.address)
+          }
         } else {
           this.update({ outputToken: token, outputTokenUsd: 0, outputAmount: 0 })
+          if (this.state.isLimitOrder) {
+            setQuoteTokenAddress(token.address)
+          }
         }
 
         this.closeTokenSelector()
@@ -342,11 +354,6 @@
             this.update({ isApproved: await OneSplitContactProxy.isOneSplitApprovedForTokenAddress(this.state.inputToken.address, this.state.inputAmount * (10 ** this.state.inputToken.decimals)) })
           }
         }
-
-        let that = this
-        setTimeout(function () {
-          that.loadApproval()
-        }, 3000)
       },
 
       buttonText() {
@@ -435,7 +442,6 @@
         document.getElementById("output-token-field").disabled = isSwap
 
         if (this.state.isLimitOrder) {
-          console.log("set class")
           document.getElementById("dashboard").classList.toggle("dashboard")
           document.getElementById("swap-form").classList.toggle("order-form")
           document.getElementById("selector-box").classList.toggle("order-box")

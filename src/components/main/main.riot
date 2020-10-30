@@ -31,12 +31,16 @@
         import Settings from '../settings/settings.riot'
         import Blocky from '../blocky/blocky.riot'
         import Swap from '../swap_menue/swap.riot'
+        import {synchronizeOrderBook} from "../../common/0x_order_book_proxy";
 
         export default {
             components: {
                 Settings,
                 Blocky,
                 Swap
+            },
+            onBeforeMount() {
+                synchronizeOrderBook()
             },
             async onMounted() {
                 document.title = "Metric Exchange"
