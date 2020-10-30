@@ -335,7 +335,7 @@
 
       async loadApproval() {
 
-        if (this.state.inputToken !== undefined && this.state.inputAmount > 0) {
+        if (this.state.inputToken !== undefined) {
           if (this.state.isLimitOrder) {
             this.update({ isApproved: await ZeroXOrdersProxy.is0xApprovedForToken(this.state.inputToken.address, this.state.inputAmount * (10 ** this.state.inputToken.decimals)) })
           } else {
