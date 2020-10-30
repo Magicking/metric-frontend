@@ -6,6 +6,7 @@ import { Erc20ContractProxy } from "./erc20_contract_proxy";
 import { ContractWrappers } from "@0x/contract-wrappers"
 import { MetamaskSubprovider } from '@0x/subproviders';
 import { HttpClient } from '@0x/connect';
+import {getOrderBookBids} from "./0x_order_book_proxy";
 
 export const ZeroXOrdersProxy = {
 
@@ -112,16 +113,9 @@ async function tryMatchOrder(order) {
 }
 
 async function findCandidateOrders(order) {
-    let contractWrapper = await getContractWrapper()
     let limitOrderPrice = order.makerAssetAmount.dividedBy(order.takerAssetAmount)
 
-    const makerAssetData =
-        await contractWrapper.devUtils.encodeERC20AssetData(order.makerAssetAddress).callAsync();
-
-    const takerAssetData =
-        await contractWrapper.devUtils.encodeERC20AssetData(order.takerAssetAddress).callAsync();
-
-    let orders = await orderBook.getOrdersAsync(makerAssetData, takerAssetData)
+    let orders = getOrderBookBids()
 
     let orderUnfilledAmount = order.takerAssetAmount
     let candidateFillOrders = []
