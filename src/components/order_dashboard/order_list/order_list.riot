@@ -5,24 +5,27 @@
         <table class="my-orders">
             <thead>
             <tr>
-                <th>Price { props.outputToken.symbol }</th>
-                <th>Amount { props.inputToken.symbol }</th>
-                <th>Total { props.outputToken.symbol } </th>
+                <th>Type</th>
+                <th>Price { state.outputToken.symbol }</th>
+                <th>Amount { state.inputToken.symbol }</th>
+                <th>Total { state.outputToken.symbol } </th>
                 <th>Expires in</th>
             </tr>
             </thead>
             <tbody>
             <tr each={ order in state.asks } key={ order.metaData.orderHash } id={ order.metaData.orderHash }>
+                <td>Sell</td>
                 <td>{ parseFloat(order.order.takerAssetAmount / order.order.makerAssetAmount).toFixed(3) }</td>
-                <td>{ (order.order.makerAssetAmount / (10 ** props.inputToken.decimals)).toFixed(3)  }</td>
-                <td>{ (order.order.takerAssetAmount / (10 ** props.outputToken.decimals)).toFixed(3)  }</td>
+                <td>{ (order.order.makerAssetAmount / (10 ** state.inputToken.decimals)).toFixed(3)  }</td>
+                <td>{ (order.order.takerAssetAmount / (10 ** state.outputToken.decimals)).toFixed(3)  }</td>
                 <td>{ getDateDiff(order.order.expirationTimeSeconds) }</td>
                 <td class="cancel-order" onclick={ this.cancelOrder }>Cancel</td>
             </tr>
             <tr each={ order in state.bids } key={ order.metaData.orderHash } id={ order.metaData.orderHash }>
+                <td>Buy</td>
                 <td>{ parseFloat(order.order.makerAssetAmount / order.order.takerAssetAmount).toFixed(3) }</td>
-                <td>{ (order.order.takerAssetAmount / (10 ** props.outputToken.decimals)).toFixed(3)  }</td>
-                <td>{ (order.order.makerAssetAmount / (10 ** props.inputToken.decimals)).toFixed(3)  }</td>
+                <td>{ (order.order.takerAssetAmount / (10 ** state.outputToken.decimals)).toFixed(3)  }</td>
+                <td>{ (order.order.makerAssetAmount / (10 ** state.inputToken.decimals)).toFixed(3)  }</td>
                 <td>{ getDateDiff(order.order.expirationTimeSeconds) }</td>
                 <td class="cancel-order" onclick={ this.cancelOrder }>Cancel</td>
             </tr>
@@ -32,9 +35,14 @@
 
     <script>
         import './order_list.css'
-        import {accountAddress} from "../../common/wallet_manager";
-        import {getOrderBookAsks, getOrderBookBids} from "../../common/0x_order_book_proxy";
-        import {ZeroXOrdersProxy} from "../../common/0x_orders_proxy";
+        import {accountAddress} from "../../../common/wallet_manager";
+        import {
+            getBaseToken,
+            getOrderBookAsks,
+            getOrderBookBids, getQuoteToken,
+            registerForOrderBookUpdateEvents
+        } from "../../../common/0x_order_book_proxy";
+        import {ZeroXOrdersProxy} from "../../../common/0x_orders_proxy";
 
         export default {
             state:{
@@ -42,7 +50,19 @@
                 bids: []
             },
 
-            onBeforeUpdate(props) {
+            onBeforeMount() {
+                this.state.inputToken = getBaseToken()
+                this.state.outputToken = getQuoteToken()
+            },
+
+            onMounted() {
+                registerForOrderBookUpdateEvents(this)
+            },
+
+            onBeforeUpdate() {
+
+                this.state.inputToken = getBaseToken()
+                this.state.outputToken = getQuoteToken()
 
                 this.state.asks =
                     getOrderBookAsks()

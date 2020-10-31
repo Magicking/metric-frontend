@@ -45,7 +45,8 @@
                 let selector = document.getElementById('token-selector');
                 let swap = document.getElementById('swap-form');
 
-                if (selector !== null && !selector.contains(e.target) && !swap.contains(e.target)) {
+                if (selector !== null && !selector.contains(e.target) &&
+                    swap !== null && !swap.contains(e.target)) {
                     this.cleanUpAndClose();
                 }
             },

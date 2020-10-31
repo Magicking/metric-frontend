@@ -1,90 +1,66 @@
 <swap>
 
-  <div id="dashboard">
+  <div class="swap-form" id="swap-form">
 
-    <div id="swap-form">
-
-      <div class="section">
-        <div class="direction-title">
-          <div>From</div>
-          <div class="balance-link" onclick={ balanceClickInputAmount } if={state.inputToken !== null && state.inputToken.balance > 0}>Balance: {this.round(state.inputToken.balance, 4)}</div>
-        </div>
-        <div class="input-container">
-          <label class="currency" onclick={ openInputSelector }>{ inputSymbol() }</label>
-          <input type="number" class="input-amount" value={ this.round(state.inputAmount, 4) } onkeyup={ updateInputAmount } placeholder="0">
-          <div class="direction-title usd-price">{state.inputTokenUsd === 0 ? null : state.inputTokenUsd}</div>
-        </div>
+    <div class="section">
+      <div class="direction-title">
+        <div>From</div>
+        <div class="balance-link" onclick={ balanceClickInputAmount } if={state.inputToken !== null && state.inputToken.balance > 0}>Balance: {this.round(state.inputToken.balance, 4)}</div>
       </div>
-
-      <div class="section switch">
-        <div class="switch-button-image" onclick={ switchDirection }></div>
+      <div class="input-container">
+        <label class="currency" onclick={ openInputSelector }>{ inputSymbol() }</label>
+        <input type="number" class="input-amount" value={ this.round(state.inputAmount, 4) } onkeyup={ updateInputAmount } placeholder="0">
+        <div class="direction-title usd-price">{state.inputTokenUsd === 0 ? null : state.inputTokenUsd}</div>
       </div>
+    </div>
 
-      <div class="section">
-        <div class="direction-title">
-          <div>To</div>
-          <div if= { isOutputDefined() && state.outputToken.balance > 0 }>Balance: { this.round(state.outputToken.balance, 4)}</div>
-        </div>
-        <div class="input-container">
-          <label class="currency" onclick={ openOutputSelector }>{ outputSymbol() }</label>
-          <input type="number" id="output-token-field" class="output-amount" value={ outputAmount() } onkeyup={ updateOutputAmount } placeholder="0">
-          <div class="direction-title usd-price">{state.outputTokenUsd === 0 ? null : state.outputTokenUsd}</div>
-        </div>
+    <div class="section switch">
+      <div class="switch-button-image" onclick={ switchDirection }></div>
+    </div>
+
+    <div class="section">
+      <div class="direction-title">
+        <div>To</div>
+        <div if= { isOutputDefined() && state.outputToken.balance > 0 }>Balance: { this.round(state.outputToken.balance, 4)}</div>
       </div>
-
-      <div class="swap-button" onclick={ buttonAction }>{ buttonText() }</div>
+      <div class="input-container">
+        <label class="currency" onclick={ openOutputSelector }>{ outputSymbol() }</label>
+        <input type="number" id="output-token-field" class="output-amount" value={ outputAmount() } onkeyup={ updateOutputAmount } placeholder="0">
+        <div class="direction-title usd-price">{state.outputTokenUsd === 0 ? null : state.outputTokenUsd}</div>
+      </div>
     </div>
 
-    <swap-price
-              if="{ canOutput() && state.isLimitOrder === false && state.conversionRate !== undefined }"
-              inputToken={ state.inputToken }
-              outputToken={ state.outputToken }
-              conversionRate={ state.conversionRate }
-              amount={ state.inputAmount }
-              metricBalance={ fetchMetricBalance() }
-      />
+    <div class="swap-button" onclick={ buttonAction }>{ buttonText() }</div>
+  </div>
 
-    <div class="order-book" if={ state.isLimitOrder && state.outputToken !== null && state.inputToken !== null }>
-      <order-book
-              inputToken = { state.inputToken }
-              outputToken = { state.outputToken }
-      />
-    </div>
+  <swap-price
+          if="{ canOutput() && state.conversionRate !== undefined }"
+          inputToken={ state.inputToken }
+          outputToken={ state.outputToken }
+          conversionRate={ state.conversionRate }
+          amount={ state.inputAmount }
+          metricBalance={ fetchMetricBalance() }
+  />
 
-    <div class="order-list" if={ state.isLimitOrder && state.outputToken !== null && state.inputToken !== null }>
-      <order-list
-              inputToken = { state.inputToken }
-              outputToken = { state.outputToken }
-      />
-    </div>
-
-    <div id="selector-box" style={ (state.showTokenSelector) ? "display:block" : "display:none" }>
-      <token-selector
-              closeTokenSelector={ closeTokenSelector }
-              selectToken={ selectToken }
-      />
-    </div>
+  <div id="selector-box" class="swap-box" style={ (state.showTokenSelector) ? "display:block" : "display:none" }>
+    <token-selector
+            closeTokenSelector={ closeTokenSelector }
+            selectToken={ selectToken }
+    />
   </div>
 
   <script>
     import './swap.css'
-    import OrderBook from '../order_book/orderbook.riot'
     import SwapPrice from '../swap_price/swap_price.riot'
     import TokenSelector from '../token_selector/token_selector.riot'
-    import OrderList from '../order_list/order_list.riot'
     import { getTokenUsdPrice } from '../../common/token_price_proxy'
-    import { ZeroXOrdersProxy } from '../../common/0x_orders_proxy'
     import { OneSplitContactProxy } from '../../common/one_split_contract_proxy'
-    import { BigNumber } from '@0x/utils';
-    import {setBaseTokenAddress, setQuoteTokenAddress} from "../../common/0x_order_book_proxy";
 
     export default {
 
       components: {
-        OrderBook,
         SwapPrice,
-        TokenSelector,
-        OrderList
+        TokenSelector
       },
 
       config: {
@@ -93,7 +69,6 @@
       },
 
       state: {
-        isLimitOrder: false,
         isApproved: true,
         inputAmount: 0,
         outputAmount: 0,
@@ -110,9 +85,6 @@
           let updateInputToken = this.tokensList().find(t => t.symbol === this.state.inputToken.symbol)
           if (updateInputToken !== undefined) {
             this.state.inputToken.balance = updateInputToken.balance
-            if (this.state.isLimitOrder) {
-              setBaseTokenAddress(updateInputToken.address)
-            }
           }
         }
 
@@ -120,9 +92,6 @@
           let updateOutputToken = this.tokensList().find(t => t.symbol === this.state.outputToken.symbol)
           if (updateOutputToken !== undefined) {
             this.state.outputToken.balance = updateOutputToken.balance
-            if (this.state.isLimitOrder) {
-              setQuoteTokenAddress(updateOutputToken.address)
-            }
           }
         }
 
@@ -133,21 +102,9 @@
           let token = this.tokensList().find(t => t.symbol.toLowerCase() === "eth")
           this.state.inputToken = token === undefined ? null : token
         }
-
-        if (this.state.outputToken === null) {
-          let token = this.tokensList().find(t => t.symbol.toLowerCase() === "build")
-          this.state.outputToken = token === undefined ? null : token
-        }
-
-        if (this.isOrderBookFeatureEnabled()) {
-          this.state.isLimitOrder = true
-        }
       },
 
       onMounted() {
-
-        this.switchOrderType(!this.state.isLimitOrder)
-
         this.updatePriceAndReschedule()
       },
 
@@ -173,14 +130,8 @@
 
         if (this.state.pendingTokenSelection === "input") {
           this.update({ inputToken: token, inputTokenUsd: 0, inputAmount: 0 })
-          if (this.state.isLimitOrder) {
-            setBaseTokenAddress(token.address)
-          }
         } else {
           this.update({ outputToken: token, outputTokenUsd: 0, outputAmount: 0 })
-          if (this.state.isLimitOrder) {
-            setQuoteTokenAddress(token.address)
-          }
         }
 
         this.closeTokenSelector()
@@ -222,49 +173,41 @@
         }, 1000)
       },
 
-      isOrderBookFeatureEnabled() {
-        return window.location.host !== "metric.exchange"
-      },
-
       async updatePrice() {
-        if (!this.state.isLimitOrder) {
-          if (this.canOutput()) {
+        if (this.canOutput()) {
 
-            let inputToken = this.state.inputToken
-            let outputToken = this.state.outputToken
-            let result = await OneSplitContactProxy.oneSplitContract().methods.getExpectedReturn(
-                    inputToken.address,
-                    outputToken.address,
-                    (this.state.inputAmount * (10 ** inputToken.decimals)).toLocaleString("fullwide", {useGrouping: false}),
-                    "4",
-                    "0"
-            ).call()
+          let inputToken = this.state.inputToken
+          let outputToken = this.state.outputToken
+          let result = await OneSplitContactProxy.oneSplitContract().methods.getExpectedReturn(
+                  inputToken.address,
+                  outputToken.address,
+                  (this.state.inputAmount * (10 ** inputToken.decimals)).toLocaleString("fullwide", {useGrouping: false}),
+                  "4",
+                  "0"
+          ).call()
 
-            let outputAmount = isNaN(result[0]) ? 0 : parseInt(result[0]) / (10 ** outputToken.decimals)
-            let conversionRate = outputAmount / this.state.inputAmount
+          let outputAmount = isNaN(result[0]) ? 0 : parseInt(result[0]) / (10 ** outputToken.decimals)
+          let conversionRate = outputAmount / this.state.inputAmount
 
-            let usdPrice = await getTokenUsdPrice(outputToken.address, outputToken.symbol)
+          let usdPrice = await getTokenUsdPrice(outputToken.address, outputToken.symbol)
 
-            var usdAmount = usdPrice * outputAmount;
-            if (usdAmount > 0) {
-              usdAmount = `≈ $${this.round(usdPrice * outputAmount, 2)}`
-            }
-
-            this.update({
-              conversionRate: conversionRate,
-              outputAmount: outputAmount,
-              outputTokenUsd: usdAmount,
-              swapDistribution: result[1]
-            })
-
-          } else {
-            this.update({
-              outputAmount: 0,
-              outputTokenUsd: 0
-            })
+          var usdAmount = usdPrice * outputAmount;
+          if (usdAmount > 0) {
+            usdAmount = `≈ $${this.round(usdPrice * outputAmount, 2)}`
           }
+
+          this.update({
+            conversionRate: conversionRate,
+            outputAmount: outputAmount,
+            outputTokenUsd: usdAmount,
+            swapDistribution: result[1]
+          })
+
         } else {
-          this.update()
+          this.update({
+            outputAmount: 0,
+            outputTokenUsd: 0
+          })
         }
       },
 
@@ -327,10 +270,7 @@
       },
 
       outputAmount() {
-        if (this.state.isLimitOrder) {
-          return this.round(this.state.outputAmount, 4)
-        }
-        else if(this.canOutput() && this.state.conversionRate !== undefined) {
+        if(this.canOutput() && this.state.conversionRate !== undefined) {
           return this.round(this.state.inputAmount * this.state.conversionRate, 4)
         } else {
           return 0
@@ -348,11 +288,7 @@
       async loadApproval() {
 
         if (this.state.inputToken !== undefined) {
-          if (this.state.isLimitOrder) {
-            this.update({ isApproved: await ZeroXOrdersProxy.is0xApprovedForToken(this.state.inputToken.address, this.state.inputAmount * (10 ** this.state.inputToken.decimals)) })
-          } else {
-            this.update({ isApproved: await OneSplitContactProxy.isOneSplitApprovedForTokenAddress(this.state.inputToken.address, this.state.inputAmount * (10 ** this.state.inputToken.decimals)) })
-          }
+          this.update({ isApproved: await OneSplitContactProxy.isOneSplitApprovedForTokenAddress(this.state.inputToken.address, this.state.inputAmount * (10 ** this.state.inputToken.decimals)) })
         }
       },
 
@@ -366,11 +302,7 @@
         }
 
         if (this.state.isApproved) {
-          if (this.state.isLimitOrder) {
-            return "PLACE ORDER"
-          } else {
-            return "SWAP"
-          }
+          return "SWAP"
         }
 
         return "APPROVE"
@@ -381,26 +313,9 @@
           await this.connectWallet()
         } else {
           if (!this.state.isApproved) {
-            if (this.state.isLimitOrder) {
-              await ZeroXOrdersProxy.approveZeroXAllowance(this.state.inputToken.address)
-            } else {
-              await OneSplitContactProxy.approveOneSplitForToken(this.state.inputToken.address)
-            }
+            await OneSplitContactProxy.approveOneSplitForToken(this.state.inputToken.address)
           } else if (this.state.inputToken && this.state.outputToken) {
-            if (this.state.isLimitOrder) {
-              await ZeroXOrdersProxy.submitOrder(
-                {
-                  makerAssetAmount: new BigNumber(this.state.inputAmount * (10 ** this.state.inputToken.decimals)),
-                  makerAssetAddress: this.state.inputToken.address,
-                  takerAssetAmount: new BigNumber(this.state.outputAmount * (10 ** this.state.outputToken.decimals)),
-                  takerAssetAddress: this.state.outputToken.address
-                },
-                this.config.referralAddress,
-                this.calculateMetricFee()
-              )
-            } else {
-              this.sendSwap()
-            }
+            this.sendSwap()
           }
         }
       },
@@ -427,31 +342,6 @@
         await this.loadApproval()
       },
 
-      switchToQuickSwap() {
-        this.switchOrderType(true)
-      },
-
-      switchToLimitOrder() {
-        this.switchOrderType(false)
-      },
-
-      switchOrderType(isSwap){
-
-        this.state.isLimitOrder = !isSwap
-
-        document.getElementById("output-token-field").disabled = isSwap
-
-        if (this.state.isLimitOrder) {
-          document.getElementById("dashboard").classList.toggle("dashboard")
-          document.getElementById("swap-form").classList.toggle("order-form")
-          document.getElementById("selector-box").classList.toggle("order-box")
-        } else {
-          document.getElementById("selector-box").classList.toggle("swap-box")
-          document.getElementById("swap-form").classList.toggle("swap-form")
-        }
-
-        this.update()
-      },
       calculateMetricFee() {
         return this.fetchMetricBalance() >= 100 ? 0 : this.config.swapFee
       }

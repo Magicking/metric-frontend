@@ -23,6 +23,13 @@ let tokens = [
         decimals: 18,
         logoURI: EthIcon,
         balance: 0
+    },
+    {
+        address: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+        decimals: 18,
+        symbol: "DAI",
+        logoURI: "https://1inch.exchange/assets/tokens/0x6b175474e89094c44da98b954eedeac495271d0f.png",
+        balance: 0
     }
 ]
 
@@ -88,5 +95,7 @@ export async function loadTokenList(observer)
 }
 
 export function addToken(token) {
-    tokens.push(token)
+    if (tokens.find(t => t.symbol === token.symbol) === undefined) {
+        tokens.push(token)
+    }
 }

@@ -1,0 +1,210 @@
+<order-form>
+
+    <div class="order-form">
+
+        <div class="order-line token-selector button" onclick={ openTokenSelector }>{ state.inputToken.symbol } ˅</div>
+
+        <div class="order-line order-buttons">
+            <div id="buy-button" class="buy-button button" onclick={ setBuyOrderType }>Buy</div>
+            <div id="sell-button" class="sell-button button" onclick={ setSellOrderType }>Sell</div>
+        </div>
+
+        <div class="order-line">Amount</div>
+        <div class="order-line order-input">
+            <input type="number" value={ state.amount } onkeyup={ updateAmount } placeholder="0"/>
+            <label>{ state.inputToken.symbol }</label>
+        </div>
+
+        <div class="order-line">Price</div>
+        <div class="order-line order-input">
+            <input type="number" value={ state.price } onkeyup={ updatePrice } placeholder="0"/>
+            <label>{ state.outputToken.symbol }</label>
+        </div>
+
+        <div class="order-line order-info">
+            <div>Fee</div>
+            <label>{ formattedFeeAmount() } { state.outputToken.symbol }</label>
+        </div>
+        <div class="order-line order-info">
+            <div>Total</div>
+            <label>{ formattedTotalAmount() } { state.outputToken.symbol }</label>
+        </div>
+
+        <div class="order-line button active-button" onclick={ this.submitOrder }>
+            { orderButtonLabel() }
+        </div>
+
+        <div id="token-selector-box" style="display:none" }>
+            <token-selector
+                    closeTokenSelector={ closeTokenSelector }
+                    selectToken={ selectToken }
+            />
+        </div>
+
+    </div>
+
+    <script>
+
+        import './order_form.css'
+        import TokenSelector from '../../token_selector/token_selector.riot'
+        import {tokensList} from "../../../common/token_fetch";
+        import {
+            setBaseToken,
+            setQuoteToken
+        } from "../../../common/0x_order_book_proxy";
+        import {ZeroXOrdersProxy} from "../../../common/0x_orders_proxy";
+        import { BigNumber } from '@0x/utils';
+        import {accountAddress} from "../../../common/wallet_manager";
+
+        export default {
+            components: {
+                TokenSelector
+            },
+            config: {
+                buyOrderType: "BUY",
+                sellOrderType: "SELL",
+                referralAddress: "0x52427b0035F494a21a0A4A1AbE04d679f789c821", // build deployer
+                fee: 0.003
+            },
+            state: {
+                inputToken: null,
+                amount: 0,
+                price: 0,
+                isApproved: false,
+                showTokenSelector: false
+            },
+            closeTokenSelector() {
+                document.getElementById("token-selector-box").style.display = "none"
+            },
+            openTokenSelector() {
+                document.getElementById("token-selector-box").style.display = "block"
+            },
+            async selectToken(token) {
+
+                setBaseToken(token)
+
+                this.update({ inputToken: token })
+
+                this.closeTokenSelector()
+
+                await this.loadApproval()
+            },
+            updateAmount(e) {
+                let amount = parseFloat(e.target.value)
+                this.update({ amount: isNaN(amount) ? 0 : amount })
+            },
+            updatePrice(e) {
+                let price = parseFloat(e.target.value)
+                this.update({ price: isNaN(price) ? 0 : price })
+            },
+            onBeforeMount() {
+                this.state.inputToken =
+                    tokensList().find(t => t.symbol.toLowerCase() === "build")
+
+                this.state.outputToken =
+                    tokensList().find(t => t.symbol.toLowerCase() === "dai")
+            },
+            onMounted() {
+                this.setBuyOrderType()
+            },
+            async loadApproval() {
+                if (accountAddress() !== undefined) {
+                    await this.setTokenApproval()
+                }
+            },
+            async setBuyOrderType() {
+                if (this.state.orderType !== this.config.buyOrderType) {
+                    this.state.orderType = this.config.buyOrderType
+                    document.getElementById("buy-button").classList.toggle("active-button")
+                    document.getElementById("sell-button").classList.remove("active-button")
+                    setBaseToken(this.state.inputToken)
+                    setQuoteToken(this.state.outputToken)
+                    await this.loadApproval()
+                }
+            },
+            async setSellOrderType() {
+                if (this.state.orderType !== this.config.sellOrderType) {
+                    this.state.orderType = this.config.sellOrderType
+                    document.getElementById("buy-button").classList.remove("active-button")
+                    document.getElementById("sell-button").classList.toggle("active-button")
+                    setBaseToken(this.state.outputToken)
+                    setQuoteToken(this.state.inputToken)
+                    await this.loadApproval()
+                }
+            },
+            orderButtonLabel() {
+                if(this.state.isApproved) {
+                    return "PLACE ORDER"
+                } else {
+                    return "APPROVE"
+                }
+            },
+            async submitOrder() {
+                if (this.state.isApproved) {
+                    await ZeroXOrdersProxy.submitOrder(
+                        this.buildOrder(),
+                        this.config.referralAddress,
+                        this.config.fee
+                    )
+                } else {
+                    await ZeroXOrdersProxy.approveZeroXAllowance(this.state.inputToken.address)
+                }
+            },
+            buildOrder() {
+                let inputAmount = this.inputAmount()
+                let outputAmount = this.outputAmount()
+
+                if (this.state.orderType === this.config.buyOrderType) {
+                    return {
+                        makerAssetAmount: new BigNumber(inputAmount),
+                        makerAssetAddress: this.state.inputToken.address,
+                        takerAssetAmount: new BigNumber(outputAmount),
+                        takerAssetAddress: this.state.outputToken.address
+                    }
+                } else {
+                    return {
+                        makerAssetAmount: new BigNumber(outputAmount),
+                        makerAssetAddress: this.state.outputToken.address,
+                        takerAssetAmount: new BigNumber(inputAmount),
+                        takerAssetAddress: this.state.inputToken.address
+                    }
+                }
+            },
+            inputAmount() {
+                return this.state.amount * (10 ** this.state.inputToken.decimals)
+            },
+            outputAmount() {
+                return this.inputAmount() * this.state.price
+            },
+            formattedTotalAmount() {
+                return ((this.outputAmount() + this.feeAmount()) / (10 ** this.state.outputToken.decimals)).toFixed(3)
+            },
+            formattedFeeAmount() {
+                return (this.feeAmount() / (10 ** this.state.outputToken.decimals)).toFixed(3)
+            },
+            feeAmount() {
+                let totalExchanged = this.outputAmount() * 2
+                return totalExchanged * this.config.fee
+            },
+            async setTokenApproval() {
+                if (this.state.orderType === this.config.buyOrderType) {
+                    this.update(
+                        {
+                            isApproved: await ZeroXOrdersProxy.is0xApprovedForToken(this.state.outputToken.address, this.outputAmount())
+                        }
+                    )
+                } else {
+                    this.update(
+                        {
+                            isApproved: await ZeroXOrdersProxy.is0xApprovedForToken(this.state.inputToken.address, this.inputAmount())
+                        }
+                    )
+                }
+
+            }
+
+        }
+
+    </script>
+
+</order-form>

@@ -1,0 +1,37 @@
+<order-dashboard>
+
+    <div class="dashboard">
+
+        <div id="order-form">
+            <order-form/>
+        </div>
+
+        <div class="order-book">
+            <order-book/>
+        </div>
+
+        <div class="order-list">
+            <order-list/>
+        </div>
+
+    </div>
+
+    <script>
+
+        import './order_dashboard.css'
+        import OrderForm from './order_form/order_form.riot'
+        import OrderBook from './order_book/orderbook.riot'
+        import OrderList from './order_list/order_list.riot'
+
+        export default {
+            components: {
+                OrderForm,
+                OrderBook,
+                OrderList
+            }
+
+        }
+
+    </script>
+
+</order-dashboard>

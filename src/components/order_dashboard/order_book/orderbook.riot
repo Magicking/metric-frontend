@@ -4,9 +4,9 @@
         <table class="orders">
             <thead class="order-book-columns">
             <tr id="order-book-header">
-                <th>Price { props.outputToken.symbol }</th>
-                <th>Amount { props.inputToken.symbol }</th>
-                <th>Total { props.outputToken.symbol }</th>
+                <th>Price { state.outputToken.symbol }</th>
+                <th>Amount { state.inputToken.symbol }</th>
+                <th>Total { state.outputToken.symbol }</th>
             </tr>
             </thead>
             <tbody>
@@ -27,7 +27,12 @@
 
     <script>
         import './orderbook.css'
-        import {getOrderBookAsks, getOrderBookBids} from "../../common/0x_order_book_proxy";
+        import {
+            getBaseToken,
+            getOrderBookAsks,
+            getOrderBookBids, getQuoteToken,
+            registerForOrderBookUpdateEvents
+        } from "../../../common/0x_order_book_proxy";
 
         export default {
             config: {
@@ -38,12 +43,23 @@
                 bids: [],
                 triggerScrollToView: true,
             },
-            async onBeforeUpdate(props) {
+            onBeforeMount() {
+                this.state.inputToken = getBaseToken()
+                this.state.outputToken = getQuoteToken()
+            },
+            onMounted() {
+                registerForOrderBookUpdateEvents(this)
+            },
+            async onBeforeUpdate() {
 
-                this.state.inputToken = props.inputToken
-                this.state.outputToken = props.outputToken
+                if (this.state.inputToken !== getBaseToken() || this.state.outputToken !== getQuoteToken()) {
+                    this.state.triggerScrollToView = true
+                }
 
-                await this.fetchOrderBook(props.inputToken, props.outputToken)
+                this.state.inputToken = getBaseToken()
+                this.state.outputToken = getQuoteToken()
+
+                this.fetchOrderBook(this.state.inputToken, this.state.outputToken)
             },
             onUpdated() {
                 if (this.state.triggerScrollToView) {

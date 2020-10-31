@@ -1,6 +1,10 @@
 import {HttpClient} from "@0x/connect";
 import {getContractWrapper} from "./wallet_manager";
 
+export function registerForOrderBookUpdateEvents(object) {
+    callbacksRegister.push(object)
+}
+
 export function getReplayClient() {
     return relayClient
 }
@@ -15,19 +19,27 @@ export function getOrderBookAsks() {
 
 export async function synchronizeOrderBook() {
 
-    if (tokenCouple.quoteTokenAddress !== null && tokenCouple.baseTokenAddress !== null) {
-        await updateOrderBook(tokenCouple.baseTokenAddress, tokenCouple.quoteTokenAddress)
+    if (tokenCouple.quoteToken !== null && tokenCouple.baseToken !== null) {
+        await updateOrderBook(tokenCouple.baseToken.address, tokenCouple.quoteToken.address)
     }
 
     setTimeout(synchronizeOrderBook, 1000)
 }
 
-export function setBaseTokenAddress(address) {
-    tokenCouple.baseTokenAddress = address
+export function setBaseToken(token) {
+    tokenCouple.baseToken = token
 }
 
-export function setQuoteTokenAddress(address) {
-    tokenCouple.quoteTokenAddress = address
+export function setQuoteToken(token) {
+    tokenCouple.quoteToken = token
+}
+
+export function getBaseToken() {
+    return tokenCouple.baseToken
+}
+
+export function getQuoteToken() {
+    return tokenCouple.quoteToken
 }
 
 async function updateOrderBook(baseTokenAddress, quoteTokenAddress) {
@@ -48,6 +60,8 @@ async function updateOrderBook(baseTokenAddress, quoteTokenAddress) {
 
     bids = orderBookUpdate.bids.records
     asks = orderBookUpdate.asks.records
+
+    callbacksRegister.forEach(obj => obj.update())
 }
 
 
@@ -55,8 +69,10 @@ let bids = []
 let asks = []
 
 let tokenCouple = {
-    baseTokenAddress: null,
-    quoteTokenAddress: null
+    baseToken: null,
+    quoteToken: null
 }
 
 let relayClient = new HttpClient("https://api.0x.org/sra/v3")
+
+let callbacksRegister = []

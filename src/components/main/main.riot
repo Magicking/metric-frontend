@@ -17,7 +17,8 @@
         </div>
     </header>
 
-    <swap/>
+    <swap if={ !isOrderBookFeatureEnabled() }/>
+    <order-dashboard if={ isOrderBookFeatureEnabled() }/>
 
     <div id="footer">
         <a href="http://letsbuild.finance/" target="_blank">By BUILD Finance</a>
@@ -31,13 +32,15 @@
         import Settings from '../settings/settings.riot'
         import Blocky from '../blocky/blocky.riot'
         import Swap from '../swap_menue/swap.riot'
+        import OrderDashboard from '../order_dashboard/order_dashboard.riot'
         import {synchronizeOrderBook} from "../../common/0x_order_book_proxy";
 
         export default {
             components: {
                 Settings,
                 Blocky,
-                Swap
+                Swap,
+                OrderDashboard
             },
             onBeforeMount() {
                 synchronizeOrderBook()
@@ -49,6 +52,9 @@
             },
             async onBeforeUpdate() {
                 await this.fetchTokensBalances()
+            },
+            isOrderBookFeatureEnabled() {
+                return window.location.host !== "metric.exchange"
             }
         }
     </script>

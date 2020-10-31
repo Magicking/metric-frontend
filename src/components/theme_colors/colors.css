@@ -33,7 +33,8 @@
   --theme-switch-active-button-background-color: #21302D;
   --theme-switch-active-button-text-color: #60FFD9;
 
-  --scrollbar-color: #3D3D3D
+  --scrollbar-color: #3D3D3D;
+  --inactive-button-background-color: #000000;
 }
 
 [data-theme="light"] {
@@ -70,7 +71,8 @@
   --theme-switch-active-button-text-color: #FFFFFF;
   --theme-switch-active-button-border-color: #000000;
 
-  --scrollbar-color: #EDEDED
+  --scrollbar-color: #EDEDED;
+  --inactive-button-background-color: #F9F9F9;
 }
 
 ::-webkit-scrollbar {

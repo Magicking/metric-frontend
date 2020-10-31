@@ -1,12 +1,10 @@
 @import "../theme_colors/colors.css";
 
 #token-selector .wrapper {
-    padding: 30px 30px 0;
 }
 
 #token-selector .img {
     width: 30px;
-    padding-left: 30px;
 }
 
 #token-selector .close {
