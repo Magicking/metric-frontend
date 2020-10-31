@@ -1,12 +1,9 @@
-import { BigNumber, providerUtils } from '@0x/utils';
-import { orderFactory } from '@0x/order-utils/lib/src/order_factory';
-import { accountAddress } from './wallet_manager'
-import { getContractAddressesForChainOrThrow } from "@0x/contract-addresses";
-import { Erc20ContractProxy } from "./erc20_contract_proxy";
-import { ContractWrappers } from "@0x/contract-wrappers"
-import { MetamaskSubprovider } from '@0x/subproviders';
-import { HttpClient } from '@0x/connect';
-import {getOrderBookBids} from "./0x_order_book_proxy";
+import {BigNumber, providerUtils} from '@0x/utils';
+import {orderFactory} from '@0x/order-utils/lib/src/order_factory';
+import {accountAddress, getContractWrapper, getProvider} from './wallet_manager'
+import {getContractAddressesForChainOrThrow} from "@0x/contract-addresses";
+import {Erc20ContractProxy} from "./erc20_contract_proxy";
+import {getOrderBookBids, getReplayClient} from "./0x_order_book_proxy";
 
 export const ZeroXOrdersProxy = {
 
@@ -22,14 +19,12 @@ export const ZeroXOrdersProxy = {
 
     submitOrder: submitOrder,
 
-    cancelOrder: cancelOrder,
-
-    getContractWrapper: getContractWrapper
+    cancelOrder: cancelOrder
 }
 
 async function cancelOrder(order) {
-    let contractWrapper = await getContractWrapper()
-    return contractWrapper.exchange
+    return (await getContractWrapper())
+            .exchange
             .cancelOrder(order.order)
             .awaitTransactionSuccessAsync({ from: accountAddress() })
 }
@@ -69,7 +64,7 @@ async function submitOrder(order, referralAddress, feePercentage) {
             }
         )
 
-        await new HttpClient("https://api.0x.org/sra/v3").submitOrderAsync(signedOrder)
+        await getReplayClient().submitOrderAsync(signedOrder)
     }
 }
 
@@ -143,28 +138,3 @@ async function zeroXContractAddresses() {
     let chainId = await providerUtils.getChainIdAsync(getProvider())
     return getContractAddressesForChainOrThrow(chainId)
 }
-
-function getProvider() {
-    if (providerEngine === null) {
-        initProvider()
-    }
-    return providerEngine
-}
-
-function initProvider() {
-    providerEngine = new MetamaskSubprovider(window.web3.currentProvider)
-}
-
-async function getContractWrapper() {
-    if (contractWrapper === null) {
-        let chainId = await providerUtils.getChainIdAsync(getProvider())
-        contractWrapper = new ContractWrappers(getProvider(), {
-            chainId: chainId,
-        });
-    }
-
-    return contractWrapper
-}
-
-let providerEngine = null
-let contractWrapper = null

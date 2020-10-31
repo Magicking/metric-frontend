@@ -1,4 +1,7 @@
 import Web3 from 'web3'
+import {MetamaskSubprovider} from "@0x/subproviders";
+import {providerUtils} from "@0x/utils";
+import {ContractWrappers} from "@0x/contract-wrappers";
 
 let defaultWSUrl = "wss://mainnet.infura.io/ws/v3/12522e5176814bfda74dd672929641a3"
 
@@ -51,3 +54,28 @@ function updateAccountAddressAndRefresh(accounts, observer) {
     updateAccountAddress(accounts)
     observer.update()
 }
+
+export function getProvider() {
+    if (providerEngine === null) {
+        initProvider()
+    }
+    return providerEngine
+}
+
+function initProvider() {
+    providerEngine = new MetamaskSubprovider(window.web3.currentProvider)
+}
+
+export async function getContractWrapper() {
+    if (contractWrapper === null) {
+        let chainId = await providerUtils.getChainIdAsync(getProvider())
+        contractWrapper = new ContractWrappers(getProvider(), {
+            chainId: chainId,
+        });
+    }
+
+    return contractWrapper
+}
+
+let providerEngine = null
+let contractWrapper = null

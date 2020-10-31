@@ -1,5 +1,9 @@
 import {HttpClient} from "@0x/connect";
-import {ZeroXOrdersProxy} from "./0x_orders_proxy"
+import {getContractWrapper} from "./wallet_manager";
+
+export function getReplayClient() {
+    return relayClient
+}
 
 export function getOrderBookBids() {
     return bids
@@ -27,7 +31,7 @@ export function setQuoteTokenAddress(address) {
 }
 
 async function updateOrderBook(baseTokenAddress, quoteTokenAddress) {
-    let contractWrapper = await ZeroXOrdersProxy.getContractWrapper()
+    let contractWrapper = await getContractWrapper()
 
     const baseAssetData =
         await contractWrapper.devUtils.encodeERC20AssetData(baseTokenAddress).callAsync();
