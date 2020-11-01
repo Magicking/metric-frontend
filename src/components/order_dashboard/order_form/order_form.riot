@@ -73,6 +73,19 @@
                 isApproved: false,
                 showTokenSelector: false
             },
+            onBeforeMount() {
+                this.state.inputToken =
+                    tokensList().find(t => t.symbol.toLowerCase() === "build")
+
+                this.state.outputToken =
+                    tokensList().find(t => t.symbol.toLowerCase() === "dai")
+
+                setBaseToken(this.state.inputToken)
+                setQuoteToken(this.state.outputToken)
+            },
+            onMounted() {
+                this.setBuyOrderType()
+            },
             closeTokenSelector() {
                 document.getElementById("token-selector-box").style.display = "none"
             },
@@ -97,38 +110,24 @@
                 let price = parseFloat(e.target.value)
                 this.update({ price: isNaN(price) ? 0 : price })
             },
-            onBeforeMount() {
-                this.state.inputToken =
-                    tokensList().find(t => t.symbol.toLowerCase() === "build")
-
-                this.state.outputToken =
-                    tokensList().find(t => t.symbol.toLowerCase() === "dai")
-            },
-            onMounted() {
-                this.setBuyOrderType()
-            },
             async loadApproval() {
                 if (accountAddress() !== undefined) {
                     await this.setTokenApproval()
                 }
             },
             async setBuyOrderType() {
-                if (this.state.orderType !== this.config.buyOrderType) {
+                if (this.isSellOrder()) {
                     this.state.orderType = this.config.buyOrderType
                     document.getElementById("buy-button").classList.toggle("active-button")
                     document.getElementById("sell-button").classList.remove("active-button")
-                    setBaseToken(this.state.inputToken)
-                    setQuoteToken(this.state.outputToken)
                     await this.loadApproval()
                 }
             },
             async setSellOrderType() {
-                if (this.state.orderType !== this.config.sellOrderType) {
+                if (this.isBuyOrder()) {
                     this.state.orderType = this.config.sellOrderType
                     document.getElementById("buy-button").classList.remove("active-button")
                     document.getElementById("sell-button").classList.toggle("active-button")
-                    setBaseToken(this.state.outputToken)
-                    setQuoteToken(this.state.inputToken)
                     await this.loadApproval()
                 }
             },
@@ -154,7 +153,7 @@
                 let inputAmount = this.inputAmount()
                 let outputAmount = this.outputAmount()
 
-                if (this.state.orderType === this.config.buyOrderType) {
+                if (this.isSellOrder()) {
                     return {
                         makerAssetAmount: new BigNumber(inputAmount),
                         makerAssetAddress: this.state.inputToken.address,
@@ -183,11 +182,10 @@
                 return (this.feeAmount() / (10 ** this.state.outputToken.decimals)).toFixed(3)
             },
             feeAmount() {
-                let totalExchanged = this.outputAmount() * 2
-                return totalExchanged * this.config.fee
+                return this.outputAmount() * this.config.fee
             },
             async setTokenApproval() {
-                if (this.state.orderType === this.config.buyOrderType) {
+                if (this.isBuyOrder()) {
                     this.update(
                         {
                             isApproved: await ZeroXOrdersProxy.is0xApprovedForToken(this.state.outputToken.address, this.outputAmount())
@@ -201,6 +199,12 @@
                     )
                 }
 
+            },
+            isBuyOrder() {
+                return this.state.orderType === this.config.buyOrderType
+            },
+            isSellOrder() {
+                return this.state.orderType === this.config.sellbuyOrderType
             }
 
         }

@@ -66,11 +66,17 @@
 
                 this.state.asks =
                     getOrderBookAsks()
-                        .filter(order => order.order.makerAddress.toLowerCase() === accountAddress().toLowerCase())
+                        .filter(order => {
+                            return order.order.makerAddress.toLowerCase() === accountAddress().toLowerCase() ||
+                            order.order.takerAddress.toLowerCase() === accountAddress().toLowerCase()
+                        })
 
                 this.state.bids =
                     getOrderBookBids()
-                        .filter(order => order.order.makerAddress.toLowerCase() === accountAddress().toLowerCase())
+                        .filter(order => {
+                            return order.order.makerAddress.toLowerCase() === accountAddress().toLowerCase() ||
+                                order.order.takerAddress.toLowerCase() === accountAddress().toLowerCase()
+                        })
             },
 
             async cancelOrder(e) {
