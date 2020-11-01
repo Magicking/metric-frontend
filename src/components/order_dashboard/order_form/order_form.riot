@@ -11,13 +11,13 @@
 
         <div class="order-line">Amount</div>
         <div class="order-line order-input">
-            <input type="number" value={ state.amount } onkeyup={ updateAmount } placeholder="0"/>
+            <input type="number" value={ state.amount > 0 ? state.amount : null} onkeyup={ updateAmount } placeholder="0"/>
             <label>{ state.inputToken.symbol }</label>
         </div>
 
         <div class="order-line">Price</div>
         <div class="order-line order-input">
-            <input type="number" value={ state.price } onkeyup={ updatePrice } placeholder="0"/>
+            <input type="number" value={ state.price > 0 ? state.price : null } onkeyup={ updatePrice } placeholder="0"/>
             <label>{ state.outputToken.symbol }</label>
         </div>
 
@@ -30,8 +30,8 @@
             <label>{ formattedTotalAmount() } { state.outputToken.symbol }</label>
         </div>
 
-        <div class="order-line button active-button" onclick={ this.submitOrder }>
-            { orderButtonLabel() }
+        <div class="order-line button active-button" onclick={ this.checkApprovalAndSubmitOrder }>
+            PLACE ORDER
         </div>
 
         <div id="token-selector-box" style="display:none" }>
@@ -68,12 +68,16 @@
             },
             state: {
                 inputToken: null,
+                outputToken: null,
                 amount: 0,
                 price: 0,
-                isApproved: false,
+                isOutputTokenApproved: false,
+                isInputTokenApproved: false,
                 showTokenSelector: false
             },
             onBeforeMount() {
+                this.state.orderType = this.config.buyOrderType
+
                 this.state.inputToken =
                     tokensList().find(t => t.symbol.toLowerCase() === "build")
 
@@ -99,8 +103,6 @@
                 this.update({ inputToken: token })
 
                 this.closeTokenSelector()
-
-                await this.loadApproval()
             },
             updateAmount(e) {
                 let amount = parseFloat(e.target.value)
@@ -110,43 +112,32 @@
                 let price = parseFloat(e.target.value)
                 this.update({ price: isNaN(price) ? 0 : price })
             },
-            async loadApproval() {
-                if (accountAddress() !== undefined) {
-                    await this.setTokenApproval()
-                }
-            },
             async setBuyOrderType() {
-                if (this.isSellOrder()) {
-                    this.state.orderType = this.config.buyOrderType
-                    document.getElementById("buy-button").classList.toggle("active-button")
-                    document.getElementById("sell-button").classList.remove("active-button")
-                    await this.loadApproval()
-                }
+                this.state.orderType = this.config.buyOrderType
+                document.getElementById("sell-button").classList.remove("active-button")
+                document.getElementById("buy-button").classList.remove("active-button")
+                document.getElementById("buy-button").classList.add("active-button")
             },
             async setSellOrderType() {
-                if (this.isBuyOrder()) {
-                    this.state.orderType = this.config.sellOrderType
-                    document.getElementById("buy-button").classList.remove("active-button")
-                    document.getElementById("sell-button").classList.toggle("active-button")
-                    await this.loadApproval()
-                }
+                this.state.orderType = this.config.sellOrderType
+                document.getElementById("sell-button").classList.remove("active-button")
+                document.getElementById("buy-button").classList.remove("active-button")
+                document.getElementById("sell-button").classList.add("active-button")
             },
-            orderButtonLabel() {
-                if(this.state.isApproved) {
-                    return "PLACE ORDER"
-                } else {
-                    return "APPROVE"
+            async checkApprovalAndSubmitOrder() {
+                let isApproved = await this.isApproved()
+
+                if (!isApproved) {
+                    await ZeroXOrdersProxy.approveZeroXAllowance(this.state.inputToken.address)
+                    isApproved = await this.isApproved()
                 }
-            },
-            async submitOrder() {
-                if (this.state.isApproved) {
+
+                if (isApproved) {
                     await ZeroXOrdersProxy.submitOrder(
                         this.buildOrder(),
                         this.config.referralAddress,
                         this.config.fee
                     )
-                } else {
-                    await ZeroXOrdersProxy.approveZeroXAllowance(this.state.inputToken.address)
                 }
             },
             buildOrder() {
@@ -184,29 +175,19 @@
             feeAmount() {
                 return this.outputAmount() * this.config.fee
             },
-            async setTokenApproval() {
-                if (this.isBuyOrder()) {
-                    this.update(
-                        {
-                            isApproved: await ZeroXOrdersProxy.is0xApprovedForToken(this.state.outputToken.address, this.outputAmount())
-                        }
-                    )
-                } else {
-                    this.update(
-                        {
-                            isApproved: await ZeroXOrdersProxy.is0xApprovedForToken(this.state.inputToken.address, this.inputAmount())
-                        }
-                    )
-                }
-
-            },
             isBuyOrder() {
                 return this.state.orderType === this.config.buyOrderType
             },
             isSellOrder() {
-                return this.state.orderType === this.config.sellbuyOrderType
+                return this.state.orderType === this.config.sellOrderType
+            },
+            async isApproved() {
+                if (this.isBuyOrder()) {
+                    return await ZeroXOrdersProxy.is0xApprovedForToken(this.state.outputToken.address, this.outputAmount())
+                } else {
+                    return await ZeroXOrdersProxy.is0xApprovedForToken(this.state.inputToken.address, this.inputAmount())
+                }
             }
-
         }
 
     </script>
