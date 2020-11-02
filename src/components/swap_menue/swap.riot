@@ -39,7 +39,6 @@
           outputToken={ state.outputToken }
           conversionRate={ state.conversionRate }
           amount={ state.inputAmount }
-          metricBalance={ fetchMetricBalance() }
   />
 
   <div id="selector-box" class="swap-box" style={ (state.showTokenSelector) ? "display:block" : "display:none" }>
@@ -55,17 +54,13 @@
     import TokenSelector from '../token_selector/token_selector.riot'
     import { getTokenUsdPrice } from '../../common/token_price_proxy'
     import { OneSplitContactProxy } from '../../common/one_split_contract_proxy'
+    import {calculateMetricFee, MetricReferralAddress} from "../../common/metric_fee";
 
     export default {
 
       components: {
         SwapPrice,
         TokenSelector
-      },
-
-      config: {
-        referralAddress: "0x52427b0035F494a21a0A4A1AbE04d679f789c821", // build deployer
-        swapFee: 0.003
       },
 
       state: {
@@ -149,20 +144,9 @@
           0,
           this.state.swapDistribution,
           0,
-          this.config.referralAddress,
-          (this.calculateMetricFee() * (10 ** 18)).toString()
+          MetricReferralAddress,
+          (calculateMetricFee() * (10 ** 18)).toString()
         ).send({ from: this.accountAddress(), value: ethAmount })
-      },
-
-      fetchMetricBalance() {
-
-        let metric = this.tokensList().find(t => t.symbol.toLowerCase() === "metric")
-
-        if (metric !== undefined) {
-          return metric.balance
-        }
-
-        return 0
       },
 
       async updatePriceAndReschedule() {
@@ -340,10 +324,6 @@
         })
 
         await this.loadApproval()
-      },
-
-      calculateMetricFee() {
-        return this.fetchMetricBalance() >= 100 ? 0 : this.config.swapFee
       }
     }
   </script>

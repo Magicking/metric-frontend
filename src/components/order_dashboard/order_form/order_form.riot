@@ -54,7 +54,7 @@
         } from "../../../common/0x_order_book_proxy";
         import {ZeroXOrdersProxy} from "../../../common/0x_orders_proxy";
         import { BigNumber } from '@0x/utils';
-        import {accountAddress} from "../../../common/wallet_manager";
+        import {calculateMetricFee, MetricReferralAddress} from "../../../common/metric_fee";
 
         export default {
             components: {
@@ -62,9 +62,7 @@
             },
             config: {
                 buyOrderType: "BUY",
-                sellOrderType: "SELL",
-                referralAddress: "0x52427b0035F494a21a0A4A1AbE04d679f789c821", // build deployer
-                fee: 0.003
+                sellOrderType: "SELL"
             },
             state: {
                 inputToken: null,
@@ -135,8 +133,8 @@
                 if (isApproved) {
                     await ZeroXOrdersProxy.submitOrder(
                         this.buildOrder(),
-                        this.config.referralAddress,
-                        this.config.fee
+                        MetricReferralAddress,
+                        calculateMetricFee()
                     )
                 }
             },
@@ -173,7 +171,7 @@
                 return (this.feeAmount() / (10 ** this.state.outputToken.decimals)).toFixed(3)
             },
             feeAmount() {
-                return this.outputAmount() * this.config.fee
+                return this.outputAmount() * calculateMetricFee()
             },
             isBuyOrder() {
                 return this.state.orderType === this.config.buyOrderType

@@ -11,21 +11,23 @@
         </tr>
         <tr>
             <td class="text-left">METRIC balance</td>
-            <td class="text-right">{ props.metricBalance }</td>
+            <td class="text-right">{ metricBalance() }</td>
         </tr>
     </table>
 
     <script>
 
         import './swap_price.css'
+        import {calculateMetricFee, fetchMetricBalance} from "../../common/metric_fee";
 
         export default {
 
             swapFeeText() {
-                if (this.props.metricBalance >= 100) {
+                let fee = calculateMetricFee()
+                if (fee === 0) {
                     return "No fees 🥳"
                 } else {
-                    let feeAmount = this.round(this.props.amount * 0.003, 4)
+                    let feeAmount = this.round(this.props.amount * fee, 4)
                     return `${feeAmount} ${this.props.inputToken.symbol}`
                 }
             },
@@ -35,6 +37,10 @@
                 let outputSymbol = this.props.outputToken.symbol
                 let rate = this.round(this.props.conversionRate, 4)
                 return `${rate} ${outputSymbol} / ${inputSymbol}`
+            },
+
+            metricBalance() {
+                return fetchMetricBalance()
             }
         }
 
