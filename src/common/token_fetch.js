@@ -18,6 +18,13 @@ let tokens = [
         balance: 0
     },
     {
+        address: "0xe1212f852c0ca3491CA6b96081Ac3Cf40e989094",
+        decimals: 18,
+        symbol: "HYPE",
+        logoURI: "https://etherscan.io/images/main/empty-token.png",
+        balance: 0
+    },
+    {
         address: "0x0000000000000000000000000000000000000000",
         symbol: "ETH",
         decimals: 18,
