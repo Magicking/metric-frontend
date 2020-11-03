@@ -42,7 +42,21 @@ export function getQuoteToken() {
     return tokenCouple.quoteToken
 }
 
+export async function getBidsMatching(baseTokenAddress, quoteTokenAddress) {
+    let orders = await getOrdersMatching(baseTokenAddress, quoteTokenAddress)
+    return orders.bids.records
+}
+
 async function updateOrderBook(baseTokenAddress, quoteTokenAddress) {
+    let orderBookUpdate = await getOrdersMatching(baseTokenAddress, quoteTokenAddress)
+
+    bids = orderBookUpdate.bids.records
+    asks = orderBookUpdate.asks.records
+
+    callbacksRegister.forEach(obj => obj.update())
+}
+
+async function getOrdersMatching(baseTokenAddress, quoteTokenAddress) {
     let contractWrapper = await getContractWrapper()
 
     const baseAssetData =
@@ -51,17 +65,12 @@ async function updateOrderBook(baseTokenAddress, quoteTokenAddress) {
     const quoteAssetData =
         await contractWrapper.devUtils.encodeERC20AssetData(quoteTokenAddress).callAsync();
 
-    let orderBookUpdate = await relayClient.getOrderbookAsync(
+    return relayClient.getOrderbookAsync(
         {
             baseAssetData: baseAssetData,
             quoteAssetData: quoteAssetData,
         }
     )
-
-    bids = orderBookUpdate.bids.records
-    asks = orderBookUpdate.asks.records
-
-    callbacksRegister.forEach(obj => obj.update())
 }
 
 

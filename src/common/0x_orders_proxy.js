@@ -3,7 +3,7 @@ import {orderFactory} from '@0x/order-utils/lib/src/order_factory';
 import {accountAddress, getContractWrapper, getProvider} from './wallet_manager'
 import {getContractAddressesForChainOrThrow} from "@0x/contract-addresses";
 import {Erc20ContractProxy} from "./erc20_contract_proxy";
-import {getOrderBookBids, getReplayClient} from "./0x_order_book_proxy";
+import {getBidsMatching, getReplayClient} from "./0x_order_book_proxy";
 
 export const ZeroXOrdersProxy = {
 
@@ -108,26 +108,27 @@ async function tryMatchOrder(order) {
 }
 
 async function findCandidateOrders(order) {
-    let limitOrderPrice = order.makerAssetAmount.dividedBy(order.takerAssetAmount)
+    let limitOrderPrice = order.takerAssetAmount.dividedBy(order.makerAssetAmount)
 
-    let orders = getOrderBookBids()
+    let orders = await getBidsMatching(order.makerAssetAddress, order.takerAssetAddress)
 
     let orderUnfilledAmount = order.takerAssetAmount
     let candidateFillOrders = []
 
     orders.forEach(bid => {
-        let availableOrderPrice = bid.order.takerAssetAmount.dividedBy(bid.order.makerAssetAmount)
-        let availableOrderFill = bid.order.makerAssetAmount
+        let originalOrderFill = bid.order.makerAssetAmount
+        let availableOrderPrice = originalOrderFill.dividedBy(bid.order.takerAssetAmount)
         let remainingUnfilledOrderAmount = new BigNumber(parseInt(bid.metaData.remainingFillableTakerAssetAmount))
 
-        if (remainingUnfilledOrderAmount.isEqualTo(bid.order.takerAssetAmount)) {
+        let fillablePart =
+            originalOrderFill.multipliedBy(remainingUnfilledOrderAmount.dividedBy(bid.order.takerAssetAmount))
 
-            if (availableOrderPrice.isLessThanOrEqualTo(limitOrderPrice) &&
-                availableOrderFill.isLessThanOrEqualTo(orderUnfilledAmount))
-            {
-                candidateFillOrders.push(bid.order)
-                orderUnfilledAmount = orderUnfilledAmount.minus(availableOrderFill)
-            }
+        if (availableOrderPrice.isGreaterThanOrEqualTo(limitOrderPrice) &&
+            orderUnfilledAmount.isGreaterThan(0) &&
+            fillablePart.isGreaterThan(0))
+        {
+            candidateFillOrders.push(bid.order)
+            orderUnfilledAmount = orderUnfilledAmount.minus(BigNumber.min(fillablePart, orderUnfilledAmount))
         }
     })
 
